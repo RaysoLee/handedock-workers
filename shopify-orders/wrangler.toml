@@ -1,6 +1,6 @@
 name = "shopify-orders"
 main = "dist/worker.js"
-compatibility_date = "2025-04-291"
+compatibility_date = "2025-04-29"
 
 [dev]
 port = 8787
