@@ -1,0 +1,7 @@
+*/node_modules/
+*/dist/
+*/.wrangler/
+*/.vscode/
+*/.idea/
+*/.DS_Store
+/.DS_Store

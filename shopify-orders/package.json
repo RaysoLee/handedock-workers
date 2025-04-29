@@ -1,0 +1,12 @@
+{
+  "name": "shopify-orders",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "esbuild src/workers.ts --bundle --outfile=dist/worker.js --target=es2022 --format=esm",
+    "dev": "npm run build && wrangler dev --remote --host handedock.com"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240311.0",
+    "esbuild": "^0.20.0"
+  }
+}
