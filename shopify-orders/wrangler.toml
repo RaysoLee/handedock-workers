@@ -1,11 +1,9 @@
 name = "shopify-orders"
 main = "dist/worker.js"
 compatibility_date = "2025-04-28"
+keep_vars = true
 
 [dev]
 port = 8787
 local_protocol = "http"
 
-[vars]
-GATSBY_SHOPIFY_STORE_URL = { type = "plain_text" }
-SHOPIFY_SHOP_PASSWORD = { type = "plain_text" }
