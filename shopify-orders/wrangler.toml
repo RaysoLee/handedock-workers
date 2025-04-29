@@ -7,5 +7,5 @@ port = 8787
 local_protocol = "http"
 
 [vars]
-GATSBY_SHOPIFY_STORE_URL = { type = "secret_text" }
-SHOPIFY_SHOP_PASSWORD = { type = "secret_text" }
+GATSBY_SHOPIFY_STORE_URL = { type = "GATSBY_SHOPIFY_STORE_URL" }
+SHOPIFY_SHOP_PASSWORD = { type = "SHOPIFY_SHOP_PASSWORD" }
