@@ -1,8 +1,8 @@
 {
-  "name": "shopify-orders",
+  "name": "service-worker",
   "version": "1.0.0",
   "scripts": {
-    "build": "esbuild src/workers.ts --bundle --outfile=dist/worker.js --target=es2022 --format=esm",
+    "build": "esbuild src/index.ts --bundle --outfile=dist/worker.js --target=es2022 --format=esm",
     "dev": "npm run build && wrangler dev --remote --host handedock.com"
   },
   "devDependencies": {

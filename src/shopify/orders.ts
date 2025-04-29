@@ -1,21 +1,24 @@
+import { Env } from "src/types/public";
+import { ShopifyOrder, CustomerQueryResponse } from "src/types/shopify";
+console.log("workers.ts1122");
 export default {
-  async fetch(request, env) {
-    // 处理CORS预检请求
+  async fetch(request: Request, env: Env): Promise<Response> {
+    // 处理 CORS 预检请求
     if (request.method === "OPTIONS") {
-      return handleOptions(request)
+      return handleOptions(request);
     }
 
-    // 只允许GET请求
+    // 只允许 GET 请求
     if (request.method !== "GET") {
-      return new Response("Method Not Allowed", { status: 405 })
+      return new Response("Method Not Allowed", { status: 405 });
     }
 
     try {
-      const url = new URL(request.url)
-      const email = url.searchParams.get("email")
+      const url = new URL(request.url);
+      const email = url.searchParams.get("email");
 
       if (!email || !validateEmail(email)) {
-        return new Response("Invalid email parameter", { status: 400 })
+        return new Response("Invalid email parameter", { status: 400 });
       }
 
       // Shopify Admin API 端点
@@ -45,18 +48,18 @@ export default {
         body: JSON.stringify({ query: customerQuery }),
       });
 
-      const customerData = await customerResponse.json();
+      const customerData: CustomerQueryResponse = await customerResponse.json();
       const customer = customerData?.data?.customers?.edges[0]?.node;
 
       if (!customer) {
         return new Response(JSON.stringify({ error: "Customer not found" }), { status: 404 });
       }
 
-      const customerId = customer.id.split("gid://shopify/Customer/")[1];  // ✅ 获取用户 ID
+      const customerId = customer.id.split("gid://shopify/Customer/")[1];  // 获取用户 ID
       console.log("Customer ID:", customerId);
 
       // 获取所有订单（含分页处理）
-      const orders = await getAllShopifyOrders(env, customerId)
+      const orders = await getAllShopifyOrders(env, customerId);
       
       return new Response(JSON.stringify(orders), {
         headers: {
@@ -64,44 +67,45 @@ export default {
           "Access-Control-Allow-Origin": "*",
           "Access-Control-Allow-Methods": "GET, OPTIONS"
         }
-      })
+      });
 
-    } catch (err) {
-      return new Response(err.message, { status: 500 })
+    } catch (err: any) {
+      return new Response(err.message, { status: 500 });
     }
   }
 }
 
 // 获取所有订单（处理分页）
-async function getAllShopifyOrders(env, customerId) {
-  let allOrders = []
-  let nextPageUrl = null
+async function getAllShopifyOrders(env: Env, customerId: string): Promise<any[]> {
+  let allOrders: any[] = [];
+  let nextPageUrl: string | null = null;
   
   do {
     const apiUrl = nextPageUrl || 
       `https://${env.GATSBY_SHOPIFY_STORE_URL}/admin/api/2024-01/orders.json` +
-      `?status=any&customer_id=${encodeURIComponent(customerId)}`
+      `?status=any&customer_id=${encodeURIComponent(customerId)}`;
 
     const response = await fetch(apiUrl, {
       headers: {
         "X-Shopify-Access-Token": env.SHOPIFY_SHOP_PASSWORD,
         "Content-Type": "application/json"
       }
-    })
+    });
 
     if (!response.ok) {
-      throw new Error(`Shopify API Error: ${response.status}`)
+      throw new Error(`Shopify API Error: ${response.status}`);
     }
 
-    const data = await response.json()
-    allOrders = allOrders.concat(data.orders)
+    const data: {orders: ShopifyOrder} = await response.json();
+    allOrders = allOrders.concat(data.orders);
     
     // 处理分页链接
-    const linkHeader = response.headers.get('Link')
-    nextPageUrl = parseNextPageUrl(linkHeader)
-  } while (nextPageUrl)
-  console.log(allOrders)
-  return allOrders
+    const linkHeader = response.headers.get('Link');
+    nextPageUrl = parseNextPageUrl(linkHeader);
+  } while (nextPageUrl);
+  
+  console.log(allOrders);
+  return allOrders;
 }
 
 // CORS 头部
@@ -112,23 +116,23 @@ const corsHeaders = {
 };
 
 // 邮箱格式验证
-function validateEmail(email) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+function validateEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
 // 处理分页链接
-function parseNextPageUrl(linkHeader) {
-  if (!linkHeader) return null
-  const matches = linkHeader.match(/<([^>]+)>; rel="next"/)
-  return matches ? matches[1] : null
+function parseNextPageUrl(linkHeader: string | null): string | null {
+  if (!linkHeader) return null;
+  const matches = linkHeader.match(/<([^>]+)>; rel="next"/);
+  return matches ? matches[1] : null;
 }
 
-// CORS预检处理
-function handleOptions(request) {
+// CORS 预检处理
+function handleOptions(request: Request): Response {
   const headers = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type"
-  }
-  return new Response(null, { headers })
+  };
+  return new Response(null, { headers });
 }

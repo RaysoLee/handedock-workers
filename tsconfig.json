@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "outDir": "dist",
+    "esModuleInterop": true,
+    "allowJs": true,
+    "strict": true,
+    "types": ["@cloudflare/workers-types"],
+    "baseUrl": ".",              // 关键设置
+    "paths": {
+      "@/*": ["src/*"]           // 这里定义路径别名
+    }
+  },
+  "include": ["src"]
+}
