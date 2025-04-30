@@ -1,8 +1,8 @@
+import { validateEmail } from "src/lib/utils";
 import { Env } from "src/types/public";
 import { ShopifyOrder, CustomerQueryResponse } from "src/types/shopify";
-console.log("workers.ts1122");
-export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
+
+export default async function (request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     // 处理 CORS 预检请求
     if (request.method === "OPTIONS") {
       return handleOptions(request);
@@ -16,7 +16,6 @@ export default {
     try {
       const url = new URL(request.url);
       const email = url.searchParams.get("email");
-
       if (!email || !validateEmail(email)) {
         return new Response("Invalid email parameter", { status: 400 });
       }
@@ -73,7 +72,6 @@ export default {
       return new Response(err.message, { status: 500 });
     }
   }
-}
 
 // 获取所有订单（处理分页）
 async function getAllShopifyOrders(env: Env, customerId: string): Promise<any[]> {
@@ -114,11 +112,6 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "GET, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type"
 };
-
-// 邮箱格式验证
-function validateEmail(email: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
 
 // 处理分页链接
 function parseNextPageUrl(linkHeader: string | null): string | null {
