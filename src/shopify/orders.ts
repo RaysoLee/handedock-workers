@@ -1,5 +1,5 @@
 import { validateEmail } from "src/lib/utils";
-import { Env } from "src/types/public";
+import { Env, Result, HttpStatusText  } from "src/types/public";
 import { ShopifyOrder, CustomerQueryResponse } from "src/types/shopify";
 
 export default async function (request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
@@ -10,14 +10,24 @@ export default async function (request: Request, env: Env, ctx: ExecutionContext
 
     // 只允许 GET 请求
     if (request.method !== "GET") {
-      return new Response("Method Not Allowed", { status: 405 });
+      const result: Result<null> = {
+            status: 405,
+            data: null,
+            msg: HttpStatusText[405],
+          } 
+      return new Response(JSON.stringify(result), { status: 405, headers: corsHeaders });
     }
 
     try {
       const url = new URL(request.url);
       const email = url.searchParams.get("email");
       if (!email || !validateEmail(email)) {
-        return new Response("Invalid email parameter", { status: 400 });
+        const result: Result<null> = {
+          status: 400,
+          data: null,
+          msg: "Invalid email parameter",
+        } 
+        return new Response(JSON.stringify(result), { status: 400, headers: corsHeaders });
       }
 
       // Shopify Admin API 端点
@@ -51,7 +61,12 @@ export default async function (request: Request, env: Env, ctx: ExecutionContext
       const customer = customerData?.data?.customers?.edges[0]?.node;
 
       if (!customer) {
-        return new Response(JSON.stringify({ error: "Customer not found" }), { status: 404 });
+        const result: Result<null> = {
+          status: 404,
+          data: null,
+          msg: "Customer not found",
+        }
+        return new Response(JSON.stringify(result), { status: 404, headers: corsHeaders });
       }
 
       const customerId = customer.id.split("gid://shopify/Customer/")[1];  // 获取用户 ID
@@ -59,8 +74,13 @@ export default async function (request: Request, env: Env, ctx: ExecutionContext
 
       // 获取所有订单（含分页处理）
       const orders = await getAllShopifyOrders(env, customerId);
+      const result: Result<any[]> = {
+        status: 200,
+        data: orders,
+        msg: "Success",
+      }
       
-      return new Response(JSON.stringify(orders), {
+      return new Response(JSON.stringify(result), {
         headers: {
           "Content-Type": "application/json",
           "Access-Control-Allow-Origin": "*",
@@ -69,7 +89,12 @@ export default async function (request: Request, env: Env, ctx: ExecutionContext
       });
 
     } catch (err: any) {
-      return new Response(err.message, { status: 500 });
+      const result: Result<null> = {
+        status: 500,
+        data: null,
+        msg: err.message,
+      }
+      return new Response(JSON.stringify(result), { status: 500, headers: corsHeaders });
     }
   }
 

@@ -3,7 +3,7 @@
 
 // shopify 订单处理
 import shopifyOrders from 'src/shopify/orders'
-// import subscribe from 'src/auth0/subscribe'
+import { sendCode, subscribe } from 'src/auth0/subscribe'
 
 import { Env } from 'src/types/public'
 
@@ -17,8 +17,12 @@ export default {
         return new Response('OK')
       case '/shopify/orders':
         return shopifyOrders(request, env, ctx)
-      // case '/auth0/subscribe':
-      //   return handleSubscribe(request, env, ctx)
+      case '/auth/subscribe/send-code':
+        // 发送验证码
+        return sendCode(request, env, ctx)
+      case '/auth/subscribe':
+        // 订阅
+        return subscribe(request, env, ctx)
       default:
         // 未知路径
         return new Response('Not Found', { status: 404 })
