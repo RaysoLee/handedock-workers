@@ -78,6 +78,9 @@ const createProfile = async (email: string, headers: any): Promise<string | null
         type: "profile",
         attributes: {
           email,
+          subscriptions: {
+            email: "subscribed" // 这行非常关键
+          }
         },
       },
     }),
@@ -100,7 +103,7 @@ const createProfile = async (email: string, headers: any): Promise<string | null
   const profile: any = await createRes.json();
   return profile?.data?.id;
 }
-
+// addProfileToList 函数
 const addProfileToList = async (profileId: string, listId: string, headers: any): Promise<Response> => {
   const addRes = await fetch(`https://a.klaviyo.com/api/lists/${listId}/relationships/profiles`, {
     method: "POST",
