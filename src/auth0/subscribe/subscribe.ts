@@ -35,6 +35,7 @@ export default async function (request: Request, env: Env, ctx: ExecutionContext
     revision: '2025-04-15',
     'content-type': 'application/vnd.api+json',
   };
+  // return createProfileAndAddToList(email, env.SUBSCRIBE_LIST_ID, klaviyoHeaders);
 
   // Step 1: 查询 Profile（GET /api/profiles?filter=email equals "xxx"）
   let profileId: string | null = await getPrefileId(email, klaviyoHeaders);
@@ -78,14 +79,11 @@ const createProfile = async (email: string, headers: any): Promise<string | null
         type: "profile",
         attributes: {
           email,
-          subscriptions: {
-            email: "subscribed" // 这行非常关键
-          }
         },
       },
     }),
   });
-
+  // 检查响应状态
   if (!createRes.ok) {
     const errorText = await createRes.text();
     const result: Result<null> = {
@@ -134,6 +132,62 @@ const addProfileToList = async (profileId: string, listId: string, headers: any)
   const result: Result<string> = {
     status: 200,
     data: profileId,
+    msg: "Subscribed successfully",
+  }
+  return new Response(JSON.stringify(result), {
+    status: 200,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
+}
+
+// 直接创建 Profile 并加入list
+const createProfileAndAddToList = async (email: string, listId: string, headers: any): Promise<Response> => {
+  const addRes = await fetch("https://a.klaviyo.com/api/profile-subscription-bulk-create-jobs/", {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      data: {
+        type: "profile-subscription-bulk-create-job",
+        attributes: {
+          list_id: listId,
+          custom_source: "WebsiteSignupForm",
+          profiles: {
+            data: [
+              {
+                type: "profile",
+                attributes: {
+                  email: email,
+                  subscriptions: [
+                    {
+                      channel: "email",
+                      status: "SUBSCRIBED"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      }
+    })
+  });
+  
+  if (!addRes.ok) {
+    const errorText = await addRes.text();
+    const result: Result<null> = {
+      status: 500,
+      data: null,
+      msg: "Failed to add profile to list",
+      detail: errorText
+    }
+    return new Response(
+      JSON.stringify(result),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+  const result: Result<string> = {
+    status: 200,
+    data: email,
     msg: "Subscribed successfully",
   }
   return new Response(JSON.stringify(result), {
